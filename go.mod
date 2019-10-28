@@ -1,4 +1,4 @@
-module hlog
+module github.com/tmsong/hlog
 
 go 1.13
 
