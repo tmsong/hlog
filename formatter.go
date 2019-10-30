@@ -60,6 +60,7 @@ func (f *LogFormatter) header() string {
 	for i := 10; i < 13; i++ {
 		if ok {
 			e := runtime.FuncForPC(p)
+			fmt.Println(e.Name())
 			if !strings.Contains(e.Name(), "hlog") &&
 				!strings.Contains(e.Name(), "logrus") &&
 				!strings.Contains(e.Name(),"gorm"){
