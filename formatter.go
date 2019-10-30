@@ -60,7 +60,8 @@ func (f *LogFormatter) header() string {
 	for i := 10; i < 13; i++ {
 		if ok {
 			e := runtime.FuncForPC(p)
-			if !strings.Contains(e.Name(), "hlog") && !strings.Contains(e.Name(), "logrus") {
+			if !strings.Contains(e.Name(), "hlog") &&
+				!strings.Contains(e.Name(), "logrus") {
 				break
 			}
 			p, file, line, ok = runtime.Caller(i)
