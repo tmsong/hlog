@@ -55,18 +55,30 @@ type LogFormatter struct {
 	Fields logrus.Fields
 }
 
+func shouldContinueTraceBack(name string)bool{
+	if strings.Contains(name, "hlog") ||
+		!strings.Contains(name, "logrus") ||
+		!strings.Contains(name,"gorm"){
+		return true
+	}
+	return false
+}
+
 func (f *LogFormatter) header() string {
 	p, file, line, ok := runtime.Caller(9)
-	for i := 10; i < 16; i++ {
-		if ok {
-			e := runtime.FuncForPC(p)
-			fmt.Println(e.Name())
-			if !strings.Contains(e.Name(), "hlog") &&
-				!strings.Contains(e.Name(), "logrus") &&
-				!strings.Contains(e.Name(),"gorm"){
-				break
+	name := runtime.FuncForPC(p).Name()
+	start := 10
+	if strings.Contains(name,"gorm"){
+		start = 13
+	}
+	if shouldContinueTraceBack(name){
+		for i := start; i < start+3; i++ {
+			if p, file, line, ok = runtime.Caller(i);ok{
+				name = runtime.FuncForPC(p).Name()
+				if !shouldContinueTraceBack(name){
+					break
+				}
 			}
-			p, file, line, ok = runtime.Caller(i)
 		}
 	}
 	if !ok {
