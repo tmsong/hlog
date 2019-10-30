@@ -67,7 +67,7 @@ func shouldContinueTraceBack(name string)bool{
 func (f *LogFormatter) header() string {
 	p, file, line, ok := runtime.Caller(9)
 	name := runtime.FuncForPC(p).Name()
-	fmt.Println(name)
+	fmt.Println(9,": ",name)
 	start := 10
 	if strings.Contains(name,"gorm"){
 		start = 13
@@ -76,7 +76,7 @@ func (f *LogFormatter) header() string {
 		for i := start; i < start+3; i++ {
 			if p, file, line, ok = runtime.Caller(i);ok{
 				name = runtime.FuncForPC(p).Name()
-				fmt.Println(name)
+				fmt.Println(i,": ",name)
 				if !shouldContinueTraceBack(name){
 					break
 				}
