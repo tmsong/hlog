@@ -57,8 +57,8 @@ type LogFormatter struct {
 
 func shouldContinueTraceBack(name string)bool{
 	if strings.Contains(name, "hlog") ||
-		!strings.Contains(name, "logrus") ||
-		!strings.Contains(name,"gorm"){
+		strings.Contains(name, "logrus") ||
+		strings.Contains(name,"gorm"){
 		return true
 	}
 	return false
@@ -67,6 +67,7 @@ func shouldContinueTraceBack(name string)bool{
 func (f *LogFormatter) header() string {
 	p, file, line, ok := runtime.Caller(9)
 	name := runtime.FuncForPC(p).Name()
+	fmt.Println(name)
 	start := 10
 	if strings.Contains(name,"gorm"){
 		start = 13
