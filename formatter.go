@@ -57,7 +57,7 @@ type LogFormatter struct {
 
 func (f *LogFormatter) header() string {
 	p, file, line, ok := runtime.Caller(9)
-	for i := 10; i < 13; i++ {
+	for i := 10; i < 16; i++ {
 		if ok {
 			e := runtime.FuncForPC(p)
 			fmt.Println(e.Name())
