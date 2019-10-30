@@ -76,6 +76,7 @@ func (f *LogFormatter) header() string {
 		for i := start; i < start+3; i++ {
 			if p, file, line, ok = runtime.Caller(i);ok{
 				name = runtime.FuncForPC(p).Name()
+				fmt.Println(name)
 				if !shouldContinueTraceBack(name){
 					break
 				}
