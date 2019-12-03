@@ -1,4 +1,4 @@
-// +build !windows
+// +build windows
 
 package hlog
 
@@ -17,7 +17,7 @@ type Logger struct {
 	wg       WaitGroupWrapper
 	file     string
 	writer   *os.File
-	iNode    uint64
+	fileAttributes    uint32
 	exitChan chan int
 	logid    int64
 	fields   logrus.Fields
@@ -55,7 +55,7 @@ func NewLoggerFromFile(verbose bool, log_file string, worker_id int64) (l *Logge
 		l.file = log_file
 		stat, err := os.Stat(l.file)
 		if err == nil && stat != nil {
-			l.iNode = stat.Sys().(*syscall.Stat_t).Ino
+			l.fileAttributes = stat.Sys().(*syscall.Win32FileAttributeData).FileAttributes
 		}
 	} else {
 		fmt.Printf("NewLoggerFromFile OpenFile err: %v \n", err)
@@ -81,8 +81,8 @@ func (l *Logger) fileScaner() {
 			logTimer = time.After(time.Second)
 			stat, err := os.Stat(l.file)
 			//文件不存在，或者大小变小都重新打开
-			if (err != nil && !os.IsExist(err)) || (nil != stat && stat.Sys().(*syscall.Stat_t).Ino != l.iNode) {
-				fmt.Printf("fileScaner diff, err:%v inode:%v \n", err, l.iNode)
+			if (err != nil && !os.IsExist(err)) || (nil != stat && stat.Sys().(*syscall.Win32FileAttributeData).FileAttributes != l.fileAttributes) {
+				fmt.Printf("fileScaner diff, err:%v fileAttributes:%v \n", err, l.fileAttributes)
 				if f, err := os.OpenFile(l.file, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666); err == nil {
 					o := l.Out
 					l.Out = NewLogWriter(f, l.wg, l.exitChan)
@@ -97,7 +97,7 @@ func (l *Logger) fileScaner() {
 					l.writer = f
 					stat, err := os.Stat(l.file)
 					if err == nil && nil != stat {
-						l.iNode = stat.Sys().(*syscall.Stat_t).Ino
+						l.fileAttributes = stat.Sys().(*syscall.Win32FileAttributeData).FileAttributes
 					}
 				} else {
 					fmt.Printf("fileScanner OpenFile err: %v", err)
