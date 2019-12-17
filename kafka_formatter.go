@@ -10,14 +10,15 @@ package hlog
 import (
 	"encoding/json"
 	"github.com/sirupsen/logrus"
+	"strings"
 )
 
-type KafkaConfig struct{
+type KafkaConfig struct {
 	Servers []string
-	Topic string
-	App           string
-	AppName       string
-	EnvName       string
+	Topic   string
+	App     string
+	AppName string
+	EnvName string
 }
 
 type KafkaLogFormatter struct {
@@ -25,12 +26,14 @@ type KafkaLogFormatter struct {
 	*KafkaConfig
 }
 
-func NewKafkaLogFormatter(f *LogFormatter,c *KafkaConfig) *KafkaLogFormatter {
+func NewKafkaLogFormatter(f *LogFormatter, c *KafkaConfig) *KafkaLogFormatter {
 	return &KafkaLogFormatter{
-		Formatter: f,
-		KafkaConfig:c,
+		Formatter:   f,
+		KafkaConfig: c,
 	}
 }
+
+const NOT_SET = "NOT_SET"
 
 func (f *KafkaLogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	if f.Formatter == nil {
@@ -41,11 +44,18 @@ func (f *KafkaLogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		return nil, err
 	}
 	m := map[string]interface{}{
-		"app":      f.App,
-		"app_name": f.AppName,
-		"env_name": f.EnvName,
-		"message":  string(message),
-		"trace_id": f.Formatter.TraceId,
+		"level":           strings.ToUpper(entry.Level.String()),
+		"app":             f.App,
+		"app_name":        f.AppName,
+		"env_name":        f.EnvName,
+		"profile":         f.EnvName,
+		"captain_seq":     NOT_SET,
+		"captain_gen":     NOT_SET,
+		"build_name":      NOT_SET,
+		"build_timestamp": NOT_SET,
+		"build_git_hash":  NOT_SET,
+		"message":         string(message),
+		"trace_id":        f.Formatter.TraceId,
 	}
 	return json.Marshal(m)
 }
