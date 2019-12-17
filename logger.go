@@ -23,7 +23,7 @@ type Logger struct {
 	fields   logrus.Fields
 }
 
-func NewLogger(verbose bool, w io.Writer, workerId int64) (log *Logger) {
+func NewLogger(debug bool, w io.Writer, workerId int64) (log *Logger) {
 	logger := &Logger{exitChan: make(chan int)}
 	logger.Out = w
 	logger.fields = logrus.Fields{}
@@ -37,7 +37,31 @@ func NewLogger(verbose bool, w io.Writer, workerId int64) (log *Logger) {
 	logger.Hooks = make(logrus.LevelHooks)
 	logger.Level = logrus.InfoLevel
 	logger.logid = workerId
-	if true == verbose {
+	if debug {
+		logger.Level = logrus.DebugLevel
+	}
+	return logger
+}
+
+func NewLoggerWithKafka(debug bool, w io.Writer, workerId int64, c *KafkaConfig) (log *Logger) {
+	logger := &Logger{exitChan: make(chan int)}
+	logger.Out = w
+	logger.fields = logrus.Fields{}
+	formatter := &LogFormatter{
+		WorkerId:        workerId,
+		FullTimestamp:   true,
+		TimestampFormat: "2006-01-02 15:04:05.000-0700",
+		DisableSorting:  false,
+		Fields:          logger.fields,
+	}
+	logger.Formatter = formatter
+	logger.Hooks = make(logrus.LevelHooks)
+	if h, err := NewKafkaHookWithFormatter(formatter,c,debug);err ==nil{
+		logger.Hooks.Add(h)
+	}
+	logger.Level = logrus.InfoLevel
+	logger.logid = workerId
+	if debug {
 		logger.Level = logrus.DebugLevel
 	}
 	return logger
