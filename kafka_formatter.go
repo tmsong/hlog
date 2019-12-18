@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"github.com/sirupsen/logrus"
 	"strings"
-	"time"
 )
 
 type KafkaConfig struct {
@@ -55,8 +54,6 @@ func (f *KafkaLogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		"build_name":      NOT_SET,
 		"build_timestamp": NOT_SET,
 		"build_git_hash":  NOT_SET,
-		"@timestamp":      entry.Time.UTC().Format(time.RFC3339Nano),
-		"@version":        "1",
 		"message":         string(message),
 		"trace_id":        f.Formatter.TraceId,
 	}
