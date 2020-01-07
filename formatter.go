@@ -23,6 +23,7 @@ var (
 
 func init() {
 	baseTimestamp = time.Now()
+	LogFormatter = NewDefaultLogFormatter
 }
 
 func miniTS() int {
@@ -35,34 +36,26 @@ type Trace struct {
 	SrcMethod string `json:"srcMethod,omitempty"`
 }
 
+var LogFormatter FormatterFunc
+
+type FormatterFunc = func(c *Config, f logrus.Fields, workerId int64) logrus.Formatter
+
 func NewDefaultLogFormatter(c *Config, f logrus.Fields, workerId int64) logrus.Formatter {
 	traceHeader := c.TraceHeader
 	if len(traceHeader) == 0 {
 		traceHeader = DEFAULT_TRACE_HEADER
 	}
-	if c.Format == nil {
-		return &LogFormatter{
-			WorkerId:        workerId,
-			FullTimestamp:   true,
-			TimestampFormat: DEFAULT_TIMESTAMP_FORMAT,
-			DisableSorting:  false,
-			Fields:          f,
-			TraceHeader:     traceHeader,
-		}
-	} else {
-		return &LogFormatter{
-			WorkerId:        workerId,
-			FullTimestamp:   c.Format.FullTimestamp,
-			TimestampFormat: c.Format.TimestampFormat,
-			DisableSorting:  c.Format.DisableSorting,
-			DisableLog:      c.Format.DisableLog,
-			TraceHeader:     traceHeader,
-			Fields:          f,
-		}
+	return &DefaultLogFormatter{
+		WorkerId:        workerId,
+		FullTimestamp:   true,
+		TimestampFormat: DEFAULT_TIMESTAMP_FORMAT,
+		DisableSorting:  false,
+		Fields:          f,
+		TraceHeader:     traceHeader,
 	}
 }
 
-type LogFormatter struct {
+type DefaultLogFormatter struct {
 	WorkerId        int64
 	FullTimestamp   bool
 	TimestampFormat string
@@ -73,7 +66,7 @@ type LogFormatter struct {
 	Fields logrus.Fields
 }
 
-func (f *LogFormatter) header() string {
+func (f *DefaultLogFormatter) header() string {
 	p, file, line, ok := runtime.Caller(9)
 	for i := 10; i < 13; i++ {
 		if ok {
@@ -102,7 +95,7 @@ func (f *LogFormatter) header() string {
 	return fmt.Sprintf("%s:%d", file, line)
 
 }
-func (f *LogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+func (f *DefaultLogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	for fieldK, fieldV := range f.Fields {
 		entry.Data[fieldK] = fieldV
 	}
@@ -132,7 +125,7 @@ func (f *LogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (f *LogFormatter) printLog(b *bytes.Buffer, entry *logrus.Entry, keys []string, tag string) {
+func (f *DefaultLogFormatter) printLog(b *bytes.Buffer, entry *logrus.Entry, keys []string, tag string) {
 	if f.DisableLog && tag != LOGTAG_ACCESS_IN &&
 		tag != LOGTAG_ACCESS_OUT && entry.Logger.GetLevel() >= logrus.ErrorLevel {
 		return
@@ -176,43 +169,43 @@ func (f *LogFormatter) printLog(b *bytes.Buffer, entry *logrus.Entry, keys []str
 	}
 }
 
-func (f *LogFormatter) getTraceId() string {
+func (f *DefaultLogFormatter) getTraceId() string {
 	if len(f.TraceId) <= 0 {
 		f.TraceId = calculateTraceId(getIp())
 	}
 	return f.TraceId
 }
 
-func (f *LogFormatter) setTraceId(traceId string) {
+func (f *DefaultLogFormatter) setTraceId(traceId string) {
 	f.TraceId = traceId
 }
 
-func (f *LogFormatter) clearTrace() {
+func (f *DefaultLogFormatter) clearTrace() {
 	f.Trace = Trace{}
 }
 
-func (f *LogFormatter) parseTrace(req *http.Request) {
+func (f *DefaultLogFormatter) parseTrace(req *http.Request) {
 	f.TraceId = req.Header.Get(http.CanonicalHeaderKey(f.TraceHeader))
 }
 
-func (f *LogFormatter) getTrace() *Trace {
+func (f *DefaultLogFormatter) getTrace() *Trace {
 	return &Trace{
 		TraceId: f.getTraceId(),
 	}
 }
-func (f *LogFormatter) setTrace(t *Trace) {
+func (f *DefaultLogFormatter) setTrace(t *Trace) {
 	f.TraceId = t.TraceId
 	f.SrcMethod = t.SrcMethod
 	f.Caller = t.Caller
 }
 
-func (f *LogFormatter) addHttpTrace(req *http.Request) string {
+func (f *DefaultLogFormatter) addHttpTrace(req *http.Request) string {
 	trace := f.getTrace()
 	req.Header.Set(f.TraceHeader, trace.TraceId)
 	return trace.TraceId
 }
 
-func (f *LogFormatter) addRspTrace(rsp *http.ResponseWriter) string {
+func (f *DefaultLogFormatter) addRspTrace(rsp *http.ResponseWriter) string {
 	trace := f.getTrace()
 	(*rsp).Header().Set(f.TraceHeader, trace.TraceId)
 	return trace.TraceId

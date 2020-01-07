@@ -1,10 +1,3 @@
-/**
- * @note
- * kafka
- *
- * @author	songtianming
- * @date 	2019-12-17
- */
 package hlog
 
 import (
@@ -17,8 +10,8 @@ import (
 	"time"
 )
 
-func NewKafkaHookWithFormatter(f *LogFormatter, c *KafkaConfig, debug bool) (*KafkaLogrusHook, error) {
-	kFormatter := NewKafkaLogFormatter(f, c)
+func NewKafkaHookWithFormatter(f logrus.Formatter, c *KafkaConfig, debug bool) (*KafkaLogrusHook, error) {
+	kFormatter := KafkaFormatter(f, c)
 	var levels []logrus.Level
 	if debug {
 		levels = logrus.AllLevels

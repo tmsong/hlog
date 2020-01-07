@@ -1,10 +1,3 @@
-/**
- * @note
- * kafka_formatter
- *
- * @author	songtianming
- * @date 	2019-12-17
- */
 package hlog
 
 import (
@@ -13,13 +6,21 @@ import (
 	"strings"
 )
 
-type KafkaLogFormatter struct {
-	Formatter *LogFormatter
+var KafkaFormatter KafkaFormatterFunc //replaceable
+
+func init() {
+	KafkaFormatter = NewDefaultKafkaLogFormatter
+}
+
+type KafkaFormatterFunc = func(f logrus.Formatter, c *KafkaConfig) logrus.Formatter
+
+type DefaultKafkaLogFormatter struct {
+	Formatter logrus.Formatter
 	*KafkaConfig
 }
 
-func NewKafkaLogFormatter(f *LogFormatter, c *KafkaConfig) *KafkaLogFormatter {
-	return &KafkaLogFormatter{
+func NewDefaultKafkaLogFormatter(f logrus.Formatter, c *KafkaConfig) logrus.Formatter {
+	return &DefaultKafkaLogFormatter{
 		Formatter:   f,
 		KafkaConfig: c,
 	}
@@ -27,7 +28,7 @@ func NewKafkaLogFormatter(f *LogFormatter, c *KafkaConfig) *KafkaLogFormatter {
 
 const NOT_SET = "NOT_SET"
 
-func (f *KafkaLogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+func (f *DefaultKafkaLogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	if f.Formatter == nil {
 		return nil, nil
 	}
@@ -47,7 +48,9 @@ func (f *KafkaLogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		"build_timestamp": NOT_SET,
 		"build_git_hash":  NOT_SET,
 		"message":         string(message),
-		"trace_id":        f.Formatter.TraceId,
+	}
+	if defaultf, ok := f.Formatter.(*DefaultLogFormatter); ok {
+		m["trace_id"] = defaultf.TraceId
 	}
 	return json.Marshal(m)
 }

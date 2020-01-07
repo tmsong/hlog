@@ -1,5 +1,3 @@
-// +build !windows
-
 package hlog
 
 import (
@@ -10,20 +8,17 @@ import (
 
 type Logger struct {
 	logrus.Logger
-	formatterFunc NewFormatterFunc
-	config        *Config
-	wg            WaitGroupWrapper
-	exitChan      chan struct{}
-	logid         int64
-	fields        logrus.Fields
+	config   *Config
+	wg       WaitGroupWrapper
+	exitChan chan struct{}
+	logid    int64
+	fields   logrus.Fields
 }
 
-type NewFormatterFunc = func(c *Config, f logrus.Fields, workerId int64) logrus.Formatter
-
-func newLogger(c *Config, w io.Writer, formatterFunc NewFormatterFunc, workerId int64) (log *Logger) {
-	logger := &Logger{exitChan: make(chan struct{}), config: c, formatterFunc: formatterFunc, fields: logrus.Fields{}, logid: workerId}
+func newLogger(c *Config, w io.Writer, workerId int64) (log *Logger) {
+	logger := &Logger{exitChan: make(chan struct{}), config: c, fields: logrus.Fields{}, logid: workerId}
 	logger.Out = w
-	logger.Formatter = formatterFunc(c, logger.fields, workerId)
+	logger.Formatter = LogFormatter(c, logger.fields, workerId)
 	logger.Hooks = make(logrus.LevelHooks)
 	logger.Level = logrus.InfoLevel
 	if c.Debug {
@@ -34,21 +29,21 @@ func newLogger(c *Config, w io.Writer, formatterFunc NewFormatterFunc, workerId 
 
 //Clone a logger with a exist logger's config and out
 func (l *Logger) Clone(workerId int64) (log *Logger) {
-	log = newLogger(l.config, l.Out, l.formatterFunc, workerId)
+	log = newLogger(l.config, l.Out, workerId)
 	for level, hooks := range l.Hooks {
 		log.Hooks[level] = append(log.Hooks[level], hooks...)
 	}
 	return log
 }
 
-func NewLoggerWithConfig(c *Config, formatterFunc NewFormatterFunc, workerId int64) (l *Logger) {
+func NewLoggerWithConfig(c *Config, workerId int64) (l *Logger) {
 	if c.File == nil {
 		c.File = &FileConfig{}
 	}
-	l = newLogger(c, nil, formatterFunc, workerId)
+	l = newLogger(c, nil, workerId)
 	l.Out = newFileWritter(c.File, l.wg, l.exitChan)
 	if c.Kafka != nil {
-		if h, err := NewKafkaHookWithFormatter(l.Formatter.(*LogFormatter), c.Kafka, c.Debug); err == nil {
+		if h, err := NewKafkaHookWithFormatter(l.Formatter, c.Kafka, c.Debug); err == nil {
 			l.Hooks.Add(h)
 		}
 	}
@@ -64,15 +59,15 @@ func (l *Logger) SetLogid(logid int64) {
 }
 
 func (l *Logger) GetTraceId() string {
-	return l.Formatter.(*LogFormatter).getTraceId()
+	return l.Formatter.(*DefaultLogFormatter).getTraceId()
 }
 
 func (l *Logger) SetTraceId(traceId string) {
-	l.Formatter.(*LogFormatter).setTraceId(traceId)
+	l.Formatter.(*DefaultLogFormatter).setTraceId(traceId)
 }
 
 func (l *Logger) ClearTrace() {
-	l.Formatter.(*LogFormatter).clearTrace()
+	l.Formatter.(*DefaultLogFormatter).clearTrace()
 }
 func (l *Logger) Close() {
 	close(l.exitChan)
@@ -80,23 +75,23 @@ func (l *Logger) Close() {
 }
 
 func (l *Logger) ParseTrace(req *http.Request) {
-	l.Formatter.(*LogFormatter).parseTrace(req)
+	l.Formatter.(*DefaultLogFormatter).parseTrace(req)
 }
 
 func (l *Logger) AddHttpTrace(req *http.Request) string {
-	return l.Formatter.(*LogFormatter).addHttpTrace(req)
+	return l.Formatter.(*DefaultLogFormatter).addHttpTrace(req)
 }
 
 func (l *Logger) AddRspTrace(rsp *http.ResponseWriter) string {
-	return l.Formatter.(*LogFormatter).addRspTrace(rsp)
+	return l.Formatter.(*DefaultLogFormatter).addRspTrace(rsp)
 }
 
 func (l *Logger) GetTrace() *Trace {
-	return l.Formatter.(*LogFormatter).getTrace()
+	return l.Formatter.(*DefaultLogFormatter).getTrace()
 }
 
 func (l *Logger) SetTrace(t *Trace) {
-	l.Formatter.(*LogFormatter).setTrace(t)
+	l.Formatter.(*DefaultLogFormatter).setTrace(t)
 }
 
 func (l *Logger) AppendFields(fields logrus.Fields) {
