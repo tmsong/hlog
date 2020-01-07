@@ -162,7 +162,7 @@ func (fw *FileWriter) millRunOnce() error {
 		for _, f := range files {
 			if preserved[f.Name()] { //去个重
 				preserved[f.Name()] = true
-				if totalSize < fw.MaxSize*MEGABYTE {
+				if totalSize+f.Size() < fw.MaxSize*MEGABYTE {
 					totalSize += f.Size()
 					remaining = append(remaining, f)
 				} else {
