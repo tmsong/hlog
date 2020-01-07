@@ -1,4 +1,4 @@
-package slog
+package hlog
 
 import (
 	"bytes"
@@ -78,7 +78,7 @@ func (f *LogFormatter) header() string {
 	for i := 10; i < 13; i++ {
 		if ok {
 			e := runtime.FuncForPC(p)
-			if !strings.Contains(e.Name(), "slog") &&
+			if !strings.Contains(e.Name(), "hlog") &&
 				!strings.Contains(e.Name(), "logrus") {
 				break
 			}

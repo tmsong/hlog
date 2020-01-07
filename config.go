@@ -1,4 +1,4 @@
-package slog
+package hlog
 
 type Config struct {
 	Debug       bool

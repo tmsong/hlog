@@ -5,7 +5,7 @@
  * @author	songtianming
  * @date 	2019-12-17
  */
-package slog
+package hlog
 
 import (
 	"encoding/json"
