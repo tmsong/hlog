@@ -19,7 +19,7 @@ const (
 	defaultQueueSize          = 100000
 	defaultFlushDiskTimeout   = 50 * time.Millisecond
 	defaultFileChangeInterval = time.Second
-	defaultFileMillInterval   = 10 * time.Second
+	defaultFileMillInterval   = time.Hour
 
 	MEGABYTE = 1024 * 1024
 )
