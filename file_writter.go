@@ -19,7 +19,7 @@ const (
 	defaultQueueSize          = 100000
 	defaultFlushDiskTimeout   = 50 * time.Millisecond
 	defaultFileChangeInterval = time.Second
-	defaultFileMillInterval   = 30 * time.Second
+	defaultFileMillInterval   = 10 * time.Second
 
 	MEGABYTE = 1024 * 1024
 )
@@ -160,7 +160,7 @@ func (fw *FileWriter) millRunOnce() error {
 		var remaining []logInfo
 		var totalSize int64
 		for _, f := range files {
-			if preserved[f.Name()] { //去个重
+			if !preserved[f.Name()] { //去个重
 				preserved[f.Name()] = true
 				if totalSize+f.Size() < fw.MaxSize*MEGABYTE {
 					totalSize += f.Size()
