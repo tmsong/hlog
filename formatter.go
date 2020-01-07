@@ -1,4 +1,4 @@
-package hlog
+package slog
 
 import (
 	"bytes"
@@ -35,22 +35,40 @@ type Trace struct {
 	SrcMethod string `json:"srcMethod,omitempty"`
 }
 
-type HintContent struct {
-	Sample HintSampling `json:"sample,omitempty"`
-}
-
-type HintSampling struct {
-	Rate int   `json:"rate,omitempty"`
-	Code int64 `json:"code,omitempty"`
+func NewDefaultLogFormatter(c *Config, f logrus.Fields, workerId int64) *LogFormatter {
+	traceHeader := c.TraceHeader
+	if len(traceHeader) == 0 {
+		traceHeader = DEFAULT_TRACE_HEADER
+	}
+	if c.Format == nil {
+		return &LogFormatter{
+			WorkerId:        workerId,
+			FullTimestamp:   true,
+			TimestampFormat: DEFAULT_TIMESTAMP_FORMAT,
+			DisableSorting:  false,
+			Fields:          f,
+			TraceHeader:     traceHeader,
+		}
+	} else {
+		return &LogFormatter{
+			WorkerId:        workerId,
+			FullTimestamp:   c.Format.FullTimestamp,
+			TimestampFormat: c.Format.TimestampFormat,
+			DisableSorting:  c.Format.DisableSorting,
+			DisableLog:      c.Format.DisableLog,
+			TraceHeader:     traceHeader,
+			Fields:          f,
+		}
+	}
 }
 
 type LogFormatter struct {
-	WorkerId         int64
-	DisableTimestamp bool
-	FullTimestamp    bool
-	TimestampFormat  string
-	DisableSorting   bool
-	DisableLog       bool
+	WorkerId        int64
+	FullTimestamp   bool
+	TimestampFormat string
+	DisableSorting  bool
+	DisableLog      bool
+	TraceHeader     string
 	Trace
 	Fields logrus.Fields
 }
@@ -60,7 +78,7 @@ func (f *LogFormatter) header() string {
 	for i := 10; i < 13; i++ {
 		if ok {
 			e := runtime.FuncForPC(p)
-			if !strings.Contains(e.Name(), "hlog") &&
+			if !strings.Contains(e.Name(), "slog") &&
 				!strings.Contains(e.Name(), "logrus") {
 				break
 			}
@@ -174,7 +192,7 @@ func (f *LogFormatter) clearTrace() {
 }
 
 func (f *LogFormatter) parseTrace(req *http.Request) {
-	f.TraceId = req.Header.Get(http.CanonicalHeaderKey(DEFAULT_TRACE_HEADER))
+	f.TraceId = req.Header.Get(http.CanonicalHeaderKey(f.TraceHeader))
 }
 
 func (f *LogFormatter) getTrace() *Trace {
@@ -190,15 +208,16 @@ func (f *LogFormatter) setTrace(t *Trace) {
 
 func (f *LogFormatter) addHttpTrace(req *http.Request) string {
 	trace := f.getTrace()
-	req.Header.Set(DEFAULT_TRACE_HEADER, trace.TraceId)
+	req.Header.Set(f.TraceHeader, trace.TraceId)
 	return trace.TraceId
 }
 
 func (f *LogFormatter) addRspTrace(rsp *http.ResponseWriter) string {
 	trace := f.getTrace()
-	(*rsp).Header().Set(DEFAULT_TRACE_HEADER, trace.TraceId)
+	(*rsp).Header().Set(f.TraceHeader, trace.TraceId)
 	return trace.TraceId
 }
+
 func prefixFieldClashes(data logrus.Fields) {
 	_, ok := data["time"]
 	if ok {
@@ -214,9 +233,6 @@ func prefixFieldClashes(data logrus.Fields) {
 	if ok {
 		data["fields.level"] = data["level"]
 	}
-}
-func NewSpanId() string {
-	return fmt.Sprintf("%d", rand.Int63())
 }
 
 func calculateTraceId(ip string) (traceId string) {

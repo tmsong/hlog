@@ -5,32 +5,31 @@
  * @author	songtianming
  * @date 	2019-12-17
  */
-package hlog
+package slog
 
 import (
 	"crypto/tls"
 	"errors"
+	"github.com/Shopify/sarama"
 	"github.com/sirupsen/logrus"
 	"log"
 	"os"
 	"time"
-	"github.com/Shopify/sarama"
-
 )
 
-func NewKafkaHookWithFormatter(f *LogFormatter,c *KafkaConfig ,debug bool) (*KafkaLogrusHook, error) {
-	kFormatter := NewKafkaLogFormatter(f,c)
+func NewKafkaHookWithFormatter(f *LogFormatter, c *KafkaConfig, debug bool) (*KafkaLogrusHook, error) {
+	kFormatter := NewKafkaLogFormatter(f, c)
 	var levels []logrus.Level
-	if debug{
+	if debug {
 		levels = logrus.AllLevels
-	}else{
+	} else {
 		levels = []logrus.Level{
 			logrus.ErrorLevel,
 			logrus.WarnLevel,
 			logrus.InfoLevel,
 		}
 	}
-	return NewKafkaLogrusHook(levels,kFormatter,c.Servers,c.Topic,true,nil)
+	return NewKafkaLogrusHook(levels, kFormatter, c.Servers, c.Topic, true, nil)
 }
 
 // KafkaLogrusHook is the primary struct

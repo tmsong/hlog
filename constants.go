@@ -1,4 +1,9 @@
-package hlog
+package slog
+
+const (
+	DEFAULT_TIMESTAMP_FORMAT = "2006-01-02 15:04:05.000-0700"
+	DEFAULT_TRACE_HEADER     = "default-header-rid"
+)
 
 const (
 	LOG_OK        string = "ok"
@@ -33,5 +38,3 @@ var TagDescSuccMapErr = map[string]string{
 const (
 	LOGCODE_NAME string = "code"
 )
-
-var DEFAULT_TRACE_HEADER = "default-header-rid"

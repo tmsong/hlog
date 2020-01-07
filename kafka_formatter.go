@@ -5,21 +5,13 @@
  * @author	songtianming
  * @date 	2019-12-17
  */
-package hlog
+package slog
 
 import (
 	"encoding/json"
 	"github.com/sirupsen/logrus"
 	"strings"
 )
-
-type KafkaConfig struct {
-	Servers []string
-	Topic   string
-	App     string
-	AppName string
-	EnvName string
-}
 
 type KafkaLogFormatter struct {
 	Formatter *LogFormatter
