@@ -35,7 +35,7 @@ type Trace struct {
 	SrcMethod string `json:"srcMethod,omitempty"`
 }
 
-func NewDefaultLogFormatter(c *Config, f logrus.Fields, workerId int64) *LogFormatter {
+func NewDefaultLogFormatter(c *Config, f logrus.Fields, workerId int64) logrus.Formatter {
 	traceHeader := c.TraceHeader
 	if len(traceHeader) == 0 {
 		traceHeader = DEFAULT_TRACE_HEADER
