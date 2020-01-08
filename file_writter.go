@@ -19,7 +19,7 @@ const (
 	defaultQueueSize          = 100000
 	defaultFlushDiskTimeout   = 50 * time.Millisecond
 	defaultFileChangeInterval = time.Second
-	defaultFileMillInterval   = 10 * time.Second
+	defaultFileMillInterval   = time.Hour
 
 	MEGABYTE = 1024 * 1024
 )
@@ -143,12 +143,9 @@ func (fw *FileWriter) millRunOnce() error {
 	if fw.MaxAge > 0 {
 		diff := time.Duration(int64(24*time.Hour) * fw.MaxAge)
 		cutoff := currentTime().Add(-1 * diff)
-		fmt.Println("cutoff ts:", cutoff.Unix())
 		var remaining []logInfo
 		for _, f := range files {
-			fmt.Println("file:", f.Name(), "ts:", f.ts.Unix())
 			if f.ts.Before(cutoff) {
-				fmt.Println("out of range, remove")
 				remove = append(remove, f)
 			} else {
 				remaining = append(remaining, f)
