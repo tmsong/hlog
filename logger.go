@@ -41,7 +41,7 @@ func NewLoggerWithConfig(c *Config, workerId int64) (l *Logger) {
 		c.File = &FileConfig{}
 	}
 	l = newLogger(c, nil, workerId)
-	l.Out = newFileWritter(c.File, l.wg, l.exitChan)
+	l.Out = newFileWriter(c.File, l.wg, l.exitChan)
 	if c.Kafka != nil {
 		if h, err := NewKafkaHookWithFormatter(l.Formatter, c.Kafka, c.Debug); err == nil {
 			l.Hooks.Add(h)

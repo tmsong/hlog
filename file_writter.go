@@ -47,7 +47,7 @@ type logInfo struct {
 	os.FileInfo
 }
 
-func newFileWritter(fc *FileConfig, wg WaitGroupWrapper, quitChan chan struct{}) (fw *FileWriter) {
+func newFileWriter(fc *FileConfig, wg WaitGroupWrapper, quitChan chan struct{}) (fw *FileWriter) {
 	if fc == nil {
 		fc = &FileConfig{}
 	}
@@ -75,6 +75,9 @@ func (fw *FileWriter) fileWatcher() {
 		case <-fw.closeChan:
 			if fw.file != nil {
 				fw.file.Close()
+			}
+			if fw.millCh != nil {
+				close(fw.millCh)
 			}
 			return
 		case <-changeTimer.C:
@@ -213,16 +216,7 @@ func (fw *FileWriter) logWatcher() {
 				case msg := <-singleQueue:
 					fw.flush(msg)
 				default:
-					fw.Close()
-					return
-				}
-			}
-		case <-fw.closeChan:
-			for {
-				select {
-				case msg := <-singleQueue:
-					fw.flush(msg)
-				default:
+					fw.Close() //通知其他协程可以关闭文件/chan了
 					return
 				}
 			}
