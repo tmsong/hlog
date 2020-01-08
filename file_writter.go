@@ -288,6 +288,9 @@ func (fw *FileWriter) timeFromFileName(filename, prefix, ext string) (time.Time,
 		return time.Time{}, errors.New("mismatched extension")
 	}
 	t := filename[len(prefix) : len(filename)-len(ext)]
+	if fw.LocalTime {
+		return time.ParseInLocation(logFileNameTimeFormat, t, time.Local)
+	}
 	return time.Parse(logFileNameTimeFormat, t)
 }
 
