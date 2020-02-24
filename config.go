@@ -11,6 +11,7 @@ type Config struct {
 type KafkaConfig struct {
 	Servers []string
 	Topic   string
+	InjectHostname bool
 	App     string
 	AppName string
 	EnvName string

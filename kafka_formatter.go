@@ -54,3 +54,10 @@ func (f *DefaultKafkaLogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	}
 	return json.Marshal(m)
 }
+
+func (f *DefaultKafkaLogFormatter) Clone(formatter logrus.Formatter) *DefaultKafkaLogFormatter{
+	return &DefaultKafkaLogFormatter{
+		Formatter:   f,
+		KafkaConfig: f.KafkaConfig,
+	}
+}

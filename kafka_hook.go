@@ -22,26 +22,23 @@ func NewKafkaHookWithFormatter(f logrus.Formatter, c *KafkaConfig, debug bool) (
 			logrus.InfoLevel,
 		}
 	}
-	return NewKafkaLogrusHook(levels, kFormatter, c.Servers, c.Topic, true, nil)
+	return NewKafkaLogrusHook(levels, kFormatter, c, nil)
 }
 
 // KafkaLogrusHook is the primary struct
 type KafkaLogrusHook struct {
-	defaultTopic   string
-	injectHostname bool
-	hostname       string
-	levels         []logrus.Level
-	formatter      logrus.Formatter
-	producer       sarama.AsyncProducer
+	config    *KafkaConfig
+	hostname  string
+	levels    []logrus.Level
+	formatter logrus.Formatter
+	producer  sarama.AsyncProducer
 }
 
 // NewKafkaLogrusHook creates a new KafkaHook
 func NewKafkaLogrusHook(
 	levels []logrus.Level,
 	formatter logrus.Formatter,
-	brokers []string,
-	defaultTopic string,
-	injectHostname bool,
+	c *KafkaConfig,
 	tls *tls.Config) (*KafkaLogrusHook, error) {
 	var err error
 	var producer sarama.AsyncProducer
@@ -58,7 +55,7 @@ func NewKafkaLogrusHook(
 		kafkaConfig.Net.TLS.Config = tls
 	}
 
-	if producer, err = sarama.NewAsyncProducer(brokers, kafkaConfig); err != nil {
+	if producer, err = sarama.NewAsyncProducer(c.Servers, kafkaConfig); err != nil {
 		return nil, err
 	}
 
@@ -74,8 +71,7 @@ func NewKafkaLogrusHook(
 	}
 
 	hook := &KafkaLogrusHook{
-		defaultTopic,
-		injectHostname,
+		c,
 		hostname,
 		levels,
 		formatter,
@@ -83,6 +79,16 @@ func NewKafkaLogrusHook(
 	}
 
 	return hook, nil
+}
+
+func (hook *KafkaLogrusHook) Clone(f logrus.Formatter) *KafkaLogrusHook {
+	return &KafkaLogrusHook{
+		hook.config,
+		hook.hostname,
+		hook.levels,
+		KafkaFormatter(f, hook.config),
+		hook.producer,
+	}
 }
 
 // Levels is required to implement the hook interface from logrus
@@ -102,7 +108,7 @@ func (hook *KafkaLogrusHook) Fire(entry *logrus.Entry) error {
 	}
 	partitionKey = sarama.ByteEncoder(b)
 
-	if hook.injectHostname {
+	if hook.config.InjectHostname {
 		if _, ok := entry.Data["hostname"]; !ok {
 			entry.Data["hostname"] = hook.hostname
 		}
@@ -113,7 +119,7 @@ func (hook *KafkaLogrusHook) Fire(entry *logrus.Entry) error {
 	}
 	value := sarama.ByteEncoder(b)
 
-	topic := hook.defaultTopic
+	topic := hook.config.Topic
 	if tsRaw, ok := entry.Data["topic"]; ok {
 		if ts, ok := tsRaw.(string); !ok {
 			return errors.New("Incorrect topic filed type (should be string)")

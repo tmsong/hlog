@@ -33,6 +33,13 @@ func (l *Logger) Clone(workerId int64) (log *Logger) {
 	for level, hooks := range l.Hooks {
 		log.Hooks[level] = append(log.Hooks[level], hooks...)
 	}
+	for level, hooks := range log.Hooks{
+		for i, h := range hooks{
+			if kafkaHook, ok := h.(*KafkaLogrusHook);ok{
+				log.Hooks[level][i] = kafkaHook.Clone(log.Formatter)
+			}
+		}
+	}
 	return log
 }
 
