@@ -1,4 +1,4 @@
-//+build !windows
+//+build windows
 
 package hlog
 
@@ -34,14 +34,14 @@ var (
 
 type FileWriter struct {
 	*FileConfig
-	mu        sync.Mutex
-	wg        WaitGroupWrapper
-	iNode     uint64
-	file      *os.File
-	startMill sync.Once
-	millCh    chan bool
-	quitChan  chan struct{} //外界用于通知此Writer关闭
-	closeChan chan struct{} //自身的关闭，用于本身的Close()方法
+	mu                  sync.Mutex
+	wg                  WaitGroupWrapper
+	win32FileAttributes uint32
+	file                *os.File
+	startMill           sync.Once
+	millCh              chan bool
+	quitChan            chan struct{} //外界用于通知此Writer关闭
+	closeChan           chan struct{} //自身的关闭，用于本身的Close()方法
 }
 
 type logInfo struct {
@@ -93,12 +93,12 @@ func (fw *FileWriter) fileWatcher() {
 				fmt.Printf("rotate file, old file name:%s new file name:%s \n", fw.file.Name(), currentFileName)
 				needReopen = true
 			} else if stat, err := os.Stat(fw.file.Name()); err != nil && !os.IsExist(err) {
-				fmt.Printf("fileScaner diff, err:%v inode:%v \n", err, fw.iNode)
+				fmt.Printf("fileScaner diff, err:%v win32FileAttributes:%v \n", err, fw.win32FileAttributes)
 				needReopen = true
 			} else if stat != nil {
 				if fileAttr := stat.Sys(); fileAttr != nil &&
-					fileAttr.(*syscall.Stat_t).Ino != fw.iNode {
-					fmt.Printf("fileScaner diff, err:%v inode:%v \n", err, fw.iNode)
+					fileAttr.(*syscall.Win32FileAttributeData).FileAttributes != fw.win32FileAttributes {
+					fmt.Printf("fileScaner diff, err:%v win32FileAttributes:%v \n", err, fw.win32FileAttributes)
 					needReopen = true
 				}
 			}
@@ -131,7 +131,7 @@ func (fw *FileWriter) openFile(name string) error {
 		//出临界区
 		stat, err := os.Stat(fw.file.Name())
 		if err == nil && nil != stat {
-			fw.iNode = stat.Sys().(*syscall.Stat_t).Ino
+			fw.win32FileAttributes = stat.Sys().(*syscall.Win32FileAttributeData).FileAttributes
 		}
 		return nil
 	}
