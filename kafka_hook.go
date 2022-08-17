@@ -43,7 +43,7 @@ func NewKafkaLogrusHook(
 	var err error
 	var producer sarama.AsyncProducer
 	kafkaConfig := sarama.NewConfig()
-	kafkaConfig.Producer.RequiredAcks = sarama.WaitForLocal       // Only wait for the leader to ack
+	kafkaConfig.Producer.RequiredAcks = sarama.NoResponse         // No wait
 	kafkaConfig.Producer.Compression = sarama.CompressionSnappy   // Compress messages
 	kafkaConfig.Producer.Flush.Frequency = 500 * time.Millisecond // Flush batches every 500ms
 
