@@ -19,6 +19,8 @@ const (
 	LOGTAG_ACCESS_IN  string = "_com_request_in"
 	LOGTAG_ACCESS_OUT string = "_com_request_out"
 	LOGTAG_MYSQL_OK   string = "_com_mysql_success"
+	LOGTAG_SSH_OK     string = "_com_ssh_success"
+	LOGTAG_ES_OK      string = "_com_es_success"
 )
 
 const (
@@ -26,6 +28,8 @@ const (
 	LOGTAG_THRIFT_ERR  string = "_com_thrift_failure"
 	LOGTAG_REDIS_ERR   string = "_com_redis_failure"
 	LOGTAG_MYSQL_ERR   string = "_com_mysql_failure"
+	LOGTAG_SSH_ERR     string = "_com_ssh_failure"
+	LOGTAG_ES_ERR      string = "_com_es_failure"
 )
 
 var TagDescSuccMapErr = map[string]string{
@@ -33,6 +37,8 @@ var TagDescSuccMapErr = map[string]string{
 	LOGTAG_THRIFT_OK:  LOGTAG_THRIFT_ERR,
 	LOGTAG_REDIS_OK:   LOGTAG_REDIS_ERR,
 	LOGTAG_MYSQL_OK:   LOGTAG_MYSQL_ERR,
+	LOGTAG_SSH_OK:     LOGTAG_SSH_ERR,
+	LOGTAG_ES_OK:      LOGTAG_ES_ERR,
 }
 
 const (
