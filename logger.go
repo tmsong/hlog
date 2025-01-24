@@ -6,6 +6,8 @@ import (
 	"net/http"
 )
 
+var DefaultLogger = NewLoggerWithConfig(&Config{}, 0)
+
 type Logger struct {
 	logrus.Logger
 	config   *Config
@@ -27,15 +29,15 @@ func newLogger(c *Config, w io.Writer, workerId int64) (log *Logger) {
 	return logger
 }
 
-//Clone a logger with a exist logger's config and out
+// Clone a logger with a exist logger's config and out
 func (l *Logger) Clone(workerId int64) (log *Logger) {
 	log = newLogger(l.config, l.Out, workerId)
 	for level, hooks := range l.Hooks {
 		log.Hooks[level] = append(log.Hooks[level], hooks...)
 	}
-	for level, hooks := range log.Hooks{
-		for i, h := range hooks{
-			if kafkaHook, ok := h.(*KafkaLogrusHook);ok{
+	for level, hooks := range log.Hooks {
+		for i, h := range hooks {
+			if kafkaHook, ok := h.(*KafkaLogrusHook); ok {
 				log.Hooks[level][i] = kafkaHook.Clone(log.Formatter)
 			}
 		}
