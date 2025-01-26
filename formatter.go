@@ -43,12 +43,12 @@ type FormatterFunc = func(c *Config, f logrus.Fields, workerId int64) logrus.For
 func NewDefaultLogFormatter(c *Config, f logrus.Fields, workerId int64) logrus.Formatter {
 	traceHeader := c.TraceHeader
 	if len(traceHeader) == 0 {
-		traceHeader = DEFAULT_TRACE_HEADER
+		traceHeader = DefaultTraceHeader
 	}
 	return &DefaultLogFormatter{
 		WorkerId:        workerId,
 		FullTimestamp:   true,
-		TimestampFormat: DEFAULT_TIMESTAMP_FORMAT,
+		TimestampFormat: DefaultTimestampFormat,
 		DisableSorting:  false,
 		Fields:          f,
 		TraceHeader:     traceHeader,
@@ -100,9 +100,9 @@ func (f *DefaultLogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		entry.Data[fieldK] = fieldV
 	}
 	var keys = make([]string, 0, len(entry.Data))
-	var tag = LOG_TAG_UNDEF
+	var tag = LogTagUndef
 	for k := range entry.Data {
-		if k == LOG_TAG {
+		if k == LogTag {
 			tag = entry.Data[k].(string)
 			continue
 		}
@@ -126,8 +126,8 @@ func (f *DefaultLogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 }
 
 func (f *DefaultLogFormatter) printLog(b *bytes.Buffer, entry *logrus.Entry, keys []string, tag string) {
-	if f.DisableLog && tag != LOGTAG_ACCESS_IN &&
-		tag != LOGTAG_ACCESS_OUT && entry.Logger.GetLevel() >= logrus.ErrorLevel {
+	if f.DisableLog && tag != LogTagAccessIn &&
+		tag != LogTagAccessOut && entry.Logger.GetLevel() >= logrus.ErrorLevel {
 		return
 	}
 	defer func() {
@@ -156,7 +156,7 @@ func (f *DefaultLogFormatter) printLog(b *bytes.Buffer, entry *logrus.Entry, key
 	}
 	for _, k := range keys {
 		v := entry.Data[k]
-		if k == LOG_BEGIN {
+		if k == LogBegin {
 			v = float64(entry.Time.Sub(v.(time.Time)).Nanoseconds()) / (1000 * 1000)
 			k = "proc_time"
 		}
