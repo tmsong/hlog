@@ -3,7 +3,7 @@ package hlog
 import (
 	"crypto/tls"
 	"errors"
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/sirupsen/logrus"
 	"log"
 	"os"
