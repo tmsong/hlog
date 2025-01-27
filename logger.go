@@ -6,8 +6,6 @@ import (
 	"net/http"
 )
 
-var DefaultLogger = NewLoggerWithConfig(&Config{}, 0)
-
 type Logger struct {
 	logrus.Logger
 	config   *Config
