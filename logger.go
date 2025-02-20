@@ -1,6 +1,7 @@
 package hlog
 
 import (
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
@@ -20,10 +21,7 @@ func newLogger(c *Config, w io.Writer, workerId int64) (log *Logger) {
 	logger.Out = w
 	logger.Formatter = LogFormatter(c, logger.fields, workerId)
 	logger.Hooks = make(logrus.LevelHooks)
-	logger.Level = logrus.InfoLevel
-	if c.Debug {
-		logger.Level = logrus.DebugLevel
-	}
+	logger.Level = c.level
 	return logger
 }
 
@@ -47,10 +45,16 @@ func NewLoggerWithConfig(c *Config, workerId int64) (l *Logger) {
 	if c.File == nil {
 		c.File = &FileConfig{}
 	}
+	var err error
+	c.level, err = logrus.ParseLevel(c.Level)
+	if err != nil {
+		fmt.Printf("parse log level %s error: %v, use INFO instead\n", c.Level, err)
+		c.level = logrus.InfoLevel
+	}
 	l = newLogger(c, nil, workerId)
 	l.Out = newFileWriter(c.File, l.wg, l.exitChan)
 	if c.Kafka != nil {
-		if h, err := NewKafkaHookWithFormatter(l.Formatter, c.Kafka, c.Debug); err == nil {
+		if h, err := NewKafkaHookWithFormatter(l.Formatter, c.Kafka, c.level); err == nil {
 			l.Hooks.Add(h)
 		}
 	}

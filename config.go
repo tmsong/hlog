@@ -1,7 +1,10 @@
 package hlog
 
+import "github.com/sirupsen/logrus"
+
 type Config struct {
-	Debug       bool
+	Level       string
+	level       logrus.Level
 	TraceHeader string
 	Kafka       *KafkaConfig
 	File        *FileConfig
@@ -9,12 +12,12 @@ type Config struct {
 }
 
 type KafkaConfig struct {
-	Servers []string
-	Topic   string
+	Servers        []string
+	Topic          string
 	InjectHostname bool
-	App     string
-	AppName string
-	EnvName string
+	App            string
+	AppName        string
+	EnvName        string
 }
 
 type FileConfig struct {

@@ -10,16 +10,12 @@ import (
 	"time"
 )
 
-func NewKafkaHookWithFormatter(f logrus.Formatter, c *KafkaConfig, debug bool) (*KafkaLogrusHook, error) {
+func NewKafkaHookWithFormatter(f logrus.Formatter, c *KafkaConfig, level logrus.Level) (*KafkaLogrusHook, error) {
 	kFormatter := KafkaFormatter(f, c)
 	var levels []logrus.Level
-	if debug {
-		levels = logrus.AllLevels
-	} else {
-		levels = []logrus.Level{
-			logrus.ErrorLevel,
-			logrus.WarnLevel,
-			logrus.InfoLevel,
+	for _, l := range logrus.AllLevels {
+		if l <= level {
+			levels = append(levels, l)
 		}
 	}
 	return NewKafkaLogrusHook(levels, kFormatter, c, nil)
