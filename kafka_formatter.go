@@ -26,8 +26,6 @@ func NewDefaultKafkaLogFormatter(f logrus.Formatter, c *KafkaConfig) logrus.Form
 	}
 }
 
-const NOT_SET = "NOT_SET"
-
 func (f *DefaultKafkaLogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	if f.Formatter == nil {
 		return nil, nil
@@ -37,17 +35,11 @@ func (f *DefaultKafkaLogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		return nil, err
 	}
 	m := map[string]interface{}{
-		"level":           strings.ToUpper(entry.Level.String()),
-		"app":             f.App,
-		"app_name":        f.AppName,
-		"env_name":        f.EnvName,
-		"profile":         f.EnvName,
-		"captain_seq":     NOT_SET,
-		"captain_gen":     NOT_SET,
-		"build_name":      NOT_SET,
-		"build_timestamp": NOT_SET,
-		"build_git_hash":  NOT_SET,
-		"message":         string(message),
+		"level":    strings.ToUpper(entry.Level.String()),
+		"app":      f.App,
+		"app_name": f.AppName,
+		"env_name": f.EnvName,
+		"message":  string(message),
 	}
 	if defaultf, ok := f.Formatter.(*DefaultLogFormatter); ok {
 		m["trace_id"] = defaultf.TraceId
@@ -55,7 +47,7 @@ func (f *DefaultKafkaLogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return json.Marshal(m)
 }
 
-func (f *DefaultKafkaLogFormatter) Clone(formatter logrus.Formatter) *DefaultKafkaLogFormatter{
+func (f *DefaultKafkaLogFormatter) Clone(formatter logrus.Formatter) *DefaultKafkaLogFormatter {
 	return &DefaultKafkaLogFormatter{
 		Formatter:   f,
 		KafkaConfig: f.KafkaConfig,
