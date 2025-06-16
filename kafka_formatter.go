@@ -48,7 +48,7 @@ func (f *DefaultKafkaLogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		"app_name":   f.AppName,
 		"env_name":   f.EnvName,
 		"log_tag":    tag,
-		"@timestamp": entry.Time.Format(DefaultTimestampFormat),
+		"@timestamp": entry.Time.Format(DefaultKafkaTimestampFormat),
 		"message":    string(message),
 	}
 	if defaultf, ok := f.Formatter.(*DefaultLogFormatter); ok {
